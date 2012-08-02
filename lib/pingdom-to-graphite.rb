@@ -1,0 +1,3 @@
+module PingdomToGraphite
+  
+end
