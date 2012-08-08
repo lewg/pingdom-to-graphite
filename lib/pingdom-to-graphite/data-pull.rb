@@ -15,14 +15,16 @@ class PingdomToGraphite::DataPull
 
   end
 
-  # def limit
-  #   limit = @client.limit
-  #   short_time = Time.at(limit[:short][:resets_at] - Time.now).gmtime.strftime('%R:%S')
-  #   long_time = Time.at(limit[:long][:resets_at] - Time.now).gmtime.strftime('%R:%S')
-  #   limit[:friendly] = 
-  #   limit
-  # end
+  # Return the lower of the two API limits
+  def effective_limit
+    # Catch-22: We want to maximize our API calls, buy we don't have our limits until we make an API call.
+    unless @client.limit
+      @client.contacts
+    end
+    limit = @client.limit[:short][:remaining] > @client.limit[:long][:remaining] ? @client.limit[:long][:remaining] : @client.limit[:short][:remaining]
+  end
 
+  # A "Printer-friendly" version of the current limits
   def friendly_limit
     limit = @client.limit
     short_time = Time.at(limit[:short][:resets_at] - Time.now).gmtime.strftime('%R:%S')
@@ -32,6 +34,10 @@ class PingdomToGraphite::DataPull
 
   def checks
     check_list = @client.checks
+  end
+
+  def check(id)
+    check_details = @client.check(id)
   end
 
   def probes
@@ -58,14 +64,17 @@ class PingdomToGraphite::DataPull
   end
 
   # Get the full results for the range, looping over the API limits as necessary.
-  def full_results(check_id, start_ts, end_ts)
+  def full_results(check_id, start_ts, end_ts = nil, api_call_limit = 0)
     offset = 0
     full_set = Array.new
+    api_calls = 0
+    # Loop until we either grab the full data set, run out of API calls, or hit the first check
     begin
+      api_calls += 1
       result_set = self.results(check_id, start_ts, end_ts, offset)
       full_set = full_set.concat(result_set)
       offset += 100
-    end until result_set.count < 100
+    end until result_set.count < 100 || effective_limit < 100 || api_calls.eql?(api_call_limit.to_i)
     full_set
   end
 

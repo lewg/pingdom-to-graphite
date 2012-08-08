@@ -1,6 +1,13 @@
 # A sample Gemfile
 source "https://rubygems.org"
-gem "pingdom-client"
-gem "json"
 
-gem 'graphite-metric', :git => 'git://github.com/gosquared/graphite-metric.git'
+gemspec
+
+group :development do
+  gem "rake"
+  gem "aruba"
+  gem "cucumber"
+  gem "fakeweb"
+  gem "vcr"
+  gem "ronn"
+end

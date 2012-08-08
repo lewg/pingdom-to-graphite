@@ -4,7 +4,7 @@ require "pingdom-to-graphite/version"
 
 Gem::Specification.new do |s|
   s.name        = "pingdom-to-graphite"
-  s.version     = Multipartite::VERSION
+  s.version     = PingdomToGraphite::VERSION
   s.authors     = ["Lew Goettner"]
   s.email       = ["lew@goettner.net"]
   s.homepage    = "http://lewg.github.com/pingdom-to-graphite"
@@ -17,4 +17,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency "thor"
+  s.add_runtime_dependency "pingdom-client"
+  s.add_runtime_dependency "json"
+  s.add_runtime_dependency "graphite-metric"
+
 end

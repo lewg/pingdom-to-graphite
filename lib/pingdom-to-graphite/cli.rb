@@ -1,5 +1,7 @@
 require "pingdom-to-graphite"
 require "pingdom-to-graphite/data-pull"
+require "pingdom-to-graphite/data-push"
+require "graphite-metric"
 require "thor"
 require "json"
 require "fileutils"
@@ -43,8 +45,8 @@ class PingdomToGraphite::CLI < Thor
           "checks"    => ["CHECK_ID_1","CHECK_ID_2"]
         },
         "graphite"  => {
-          "server"  => "YOUR_SERVER",
-          "port"    => "YOUR_PORT",
+          "host"  => "YOUR_SERVER",
+          "port"    => "2003",
           "prefix"  => "pingdom"
         }  
       }
@@ -56,12 +58,43 @@ class PingdomToGraphite::CLI < Thor
 
   end
 
+  desc "init_checks", "Add all your checks to your config. (Will overwrite existing list.)"
+  def init_checks
+    load_config!
+    load_check_list!
+    @config["pingdom"]["checks"] = @checks.keys
+    File.open(File.expand_path(options.config),"w",0600) do |f|
+      f.write(JSON.pretty_generate(@config))
+    end
+  end
+
+  desc "advice", "Gives you some advice about update frequency."
+  def advice
+    load_config!
+    total_checks = @config["pingdom"]["checks"].count
+    calls_per_check = 2 + (total_checks)
+    puts "You have #{total_checks} monitored checks. Given a 48000/day API limit:"
+    every_minutes = 5
+    begin
+      daily_calls = 60*24 / every_minutes * calls_per_check
+      puts "Every #{every_minutes} Minutes: #{daily_calls}/day - #{daily_calls < 48000 ? "WORKS" : "won't work"}"
+      every_minutes += 5
+    end until (daily_calls < 48000)
+  end
 
   desc "list", "List all your available Pingdom checks."
   def list
     load_check_list!
     @checks.each do |check_id, check|
       puts "#{check.name} (#{check.id}) - #{check.status}"
+    end
+  end
+
+  desc "probes", "List all the pingdom probes."
+  def probes
+    load_probe_list!
+    @probes.each do |probe_id, probe|
+      puts "#{probe.countryiso} - #{probe.city}"
     end
   end
 
@@ -101,52 +134,77 @@ class PingdomToGraphite::CLI < Thor
     load_probe_list!
     load_check_list!
     datapull = get_datapull
-    
+
     @config["pingdom"]["checks"].each do |check_id|
       puts "Check #{check_id}: " if options.verbose
       # Check the state file
-      puts @state
       check_state = @state.has_key?(check_id.to_s) ? @state[check_id.to_s] : Hash.new
-      puts check_state
       latest_ts = check_state.has_key?("latest_ts") ? check_state["latest_ts"] : 1.hour.ago.to_i
-      earliest_ts = check_state.has_key?("earliest_ts") ? check_state["earliest_ts"] : latest_ts
-      # Pull the data
-      rec_count = 0
-      datapull.full_results(check_id, latest_ts, nil).each do |result|
-        prefix = "#{@config["graphite"]["prefix"]}.#{@checks[check_id].type}."
-        prefix += "#{@checks[check_id].name.gsub(/ /,"_")}"
-        check_status = result.status.eql?("up") ? 1 : 0
-        check_time = Time.at(result.time).to_i
-        puts "#{prefix}.status.all #{check_status} #{check_time}" if options.verbose
-        puts "#{prefix}.status.#{@probes[result.probe_id].countryiso} #{check_status} #{check_time} " if options.verbose
-        puts "#{prefix}.response_time.all #{result.responsetime} #{check_time}" if options.verbose
-        puts "#{prefix}.response_time.#{@probes[result.probe_id].countryiso} #{result.responsetime} #{check_time}" if options.verbose
-        latest_ts = result.time if result.time > latest_ts
-        earliest_ts = result.time if result.time < earliest_ts
-        rec_count += 1
-      end
-      puts "#{rec_count} metrics sent to graphite for check #{check_id}."
-      @state[check_id] = Hash.new
-      @state[check_id]["latest_ts"] = latest_ts
-      @state[check_id]["earliest_ts"] = earliest_ts
+      new_records = pull_and_push(check_id, latest_ts)
+      puts "#{new_records} metrics sent to graphite for check #{check_id}."
     end
-    write_state!
+    puts datapull.friendly_limit
+  end
+
+  desc 'backfill [CHECK_ID]', "Work backwards from the oldest check send to graphite, grabbing more historical data."
+
+  method_option :limit,
+                :desc     => "Number of API calls to use while backfilling. If you don't provide one, I'll ask!",
+                :type     => :numeric,
+                :aliases  => "-l"
+
+  def backfill(check_id)
+    load_config!
+    load_state!
+    load_probe_list!
+    load_check_list!
+    datapull = get_datapull
+    chunk = 10
+    unless limit = options.limit
+      limit = ask("You have #{datapull.effective_limit} API calls remaining. How many would you like to use?")
+    end
+    created_ts = datapull.check(check_id).created
+    # Check the state file
+    if @state.has_key?(check_id) && @state[check_id].has_key?("earliest_ts")
+      earliest_ts = @state[check_id.to_s]["earliest_ts"]
+    else 
+      error("You can't backfill a check you've never run an update on.")
+      exit
+    end
+    # Keep within the API limits 
+    working_towards = (earliest_ts - created_ts) > 2678400 ? 31.days.ago.to_i : created_ts
+    puts "Backfilling from #{Time.at(earliest_ts)} working towards #{Time.at(working_towards)}. Check began on #{Time.at(created_ts)}"
+    # Break it into chunks
+    additions = 0
+    limit.to_i.modulo(chunk).times { additions += pull_and_push(check_id, working_towards, earliest_ts, chunk) }
+    puts "#{additions} metrics sent to graphite for check #{check_id}."
   end
 
   private
 
   def get_datapull
-    datapull = PingdomToGraphite::DataPull.new(@config["pingdom"]["username"], @config["pingdom"]["password"], @config["pingdom"]["key"], log_level)
+    if @datapull.nil?
+      load_config!
+      @datapull = PingdomToGraphite::DataPull.new(@config["pingdom"]["username"], @config["pingdom"]["password"], @config["pingdom"]["key"], log_level)
+    end
+    @datapull
+  end
+
+  def get_datapush
+    load_config!
+    datapush = PingdomToGraphite::DataPush.new(@config["graphite"]["host"], @config["graphite"]["port"])
   end
 
   def load_config!
-    config_file = File.expand_path(options.config)
-    unless File.exists?(config_file) 
-      error("Missing config file (#{options.config})")
-      exit
-    end
+    if @config.nil?
+      config_file = File.expand_path(options.config)
+      unless File.exists?(config_file) 
+        error("Missing config file (#{options.config})")
+        exit
+      end
 
-    @config = JSON::parse(File.read(config_file));
+      @config = JSON::parse(File.read(config_file));
+    end
 
   end
 
@@ -191,6 +249,48 @@ class PingdomToGraphite::CLI < Thor
       @checks[check.id] = check
     end
   end
+
+  # Take a pingdom check, and return an Array of metrics to be passed to graphite
+  def parse_result(check_id, result)
+    results = Array.new
+    prefix = "#{@config["graphite"]["prefix"]}.#{@checks[check_id.to_i].type}."
+    prefix += @checks[check_id.to_i].name.gsub(/ /,"_").gsub(/\./,"")
+    check_status = result.status.eql?("up") ? 1 : 0
+    check_time = Time.at(result.time).to_i
+    check_city = @probes[result.probe_id].city.gsub(/ /,"_").gsub(/\./,"")
+    results << GraphiteMetric::Plaintext.new("#{prefix}.status.#{@probes[result.probe_id].countryiso}.#{check_city}", check_status, check_time)
+    results << GraphiteMetric::Plaintext.new("#{prefix}.responsetime.#{@probes[result.probe_id].countryiso}.#{check_city}", result.responsetime, check_time)
+    results.each { |metric| puts metric } if options.verbose
+    results
+  end
+
+  def pull_and_push(check_id, latest_ts = nil, earlist_ts = nil, limit = nil)
+    datapull = get_datapull
+    datapush = get_datapush
+    load_state!
+    # Check the state file
+    check_state = @state.has_key?(check_id.to_s) ? @state[check_id.to_s] : Hash.new
+    latest_stored = check_state.has_key?("latest_ts") ? check_state["latest_ts"] : nil
+    earliest_stored = check_state.has_key?("earliest_ts") ? check_state["earliest_ts"] : nil
+    # Pull the data
+    rec_count = 0
+    result_list = Array.new
+    datapull.full_results(check_id, latest_ts, earlist_ts, limit).each do |result|
+      result_list += parse_result(check_id, result)
+      latest_stored = result.time if result.time > latest_stored || latest_stored.nil?
+      earliest_stored = result.time if result.time < earliest_stored || earliest_stored.nil?
+      rec_count += 1
+    end
+    # Push to graphite
+    datapush.to_graphite(result_list) unless result_list.empty?
+    # Store the state
+    @state[check_id] = Hash.new
+    @state[check_id]["latest_ts"] = latest_stored
+    @state[check_id]["earliest_ts"] = earliest_stored
+    write_state!
+    rec_count
+  end
+
 
   def log_level
     options.verbose ? Logger::DEBUG : Logger::ERROR
