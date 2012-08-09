@@ -36,19 +36,31 @@ Feature: Copy
     Then the output should match /^[A-Z]{2} - .*$/
 
   Scenario: Get the results for a specific probe
-    When I run `pingdom-to-graphite results` with a valid check_id
+    When I run `pingdom-to-graphite results` with a valid check id
     Then the exit status should be 0
-    Then the output should match /^[ \d:-] (up|down) - [\d]+ms \(.*\)$/
+    Then the output should match /^[\d-]{10} [\d:]{8} (-|\+)[\d]{4}: (up|down) - [\d]+ms \(.*\)$/
 
-  @graphite @announce
+  @graphite
   Scenario: Update the current checks without a state file
-    Given Our mock graphite server is running
+    Given A mock graphite server is running
     When I run `pingdom-to-graphite update -s teststate.json -c ../mockgraphite.json`
     Then the exit status should be 0
     Then graphite should have recieved results
     Then the file "teststate.json" should contain "latest_ts"
-    Then the output should match /./
+    Then the output should match /[\d]+ metrics sent to graphite for check [\d]+\./
     
+  Scenario: Try to backfill a check that's never been updated
+    When I run `pingdom-to-graphite backfill 1`
+    Then the exit status should be 1
+    Then the output should contain:
+    """
+    You can't backfill a check you've never run an update on.
+    """
 
-
-
+  @graphite @copystate
+  Scenario: Backfill a specific check
+    Given A mock graphite server is running
+    When I run `pingdom-to-graphite backfill -c ../mockgraphite.json -s ../copiedstate.json -l 1` with a valid check id
+    Then the exit status should be 0
+    Then graphite should have recieved results
+    Then the output should match /[\d]+ metrics sent to graphite for check [\d]+\./

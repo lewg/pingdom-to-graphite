@@ -28,7 +28,11 @@ to do any actual work.
     pingdom-to-graphite init_checks
 
 This will pre-fill the pingdom->checks setting in your config file with a list
-of all your available checks.
+of all your available checks. Since you're curious:
+
+    pingdom-to-graphite checks
+
+Will list them all, as well as their current status. Ok, back to business:
 
     pingdom-to-graphite update
 
@@ -39,7 +43,7 @@ location can be overridden with the `-s` switch.
 
     pingdom-to-graphite update
 
-"Hey, that's the same command!" you say. Indeed it is, and will run through your
+*"Hey, that's the same command!"* you say. Indeed it is, and will run through your
 checks picking up where we left of from the last update. If you stopped to check
 graphite after that last step you might even pick up a few new checks. The idea
 is just to scedule this job via cron and let  your metrics roll in on a fixed

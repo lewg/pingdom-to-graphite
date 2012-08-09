@@ -1,7 +1,8 @@
 require 'json'
 
-Given /^Our mock graphite server is running$/ do
+Given /^A mock graphite server is running$/ do
   @mock_received = Queue.new
+  @lew = "Goettner"
   @mock_socket = TCPServer.new 20003
   @server = Thread.new do
     loop do
@@ -17,10 +18,10 @@ Given /^Our mock graphite server is running$/ do
   end
 end
 
-When /^I run `([^`]*)` with a valid check_id$/ do |cmd|
+When /^I run `([^`]*)` with a valid check id$/ do |cmd|
   config_file = File.expand_path('~/.p2g/config.json')
   @config = JSON::parse(File.read(config_file));
-  step "When I run `#{cmd} #{@config["pingdom"]["checks"][0]}`"
+  step "I run `#{cmd} #{@config["pingdom"]["checks"][0]}`"
 end
 
 Then /^graphite should have recieved results$/ do 

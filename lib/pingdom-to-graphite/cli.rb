@@ -117,7 +117,6 @@ class PingdomToGraphite::CLI < Thor
     end_time = (options.end_time) ? DateTime.parse(options.end_time).to_i : DateTime.now.to_i
     if start_time - end_time > 2764800
       error("Date range must be less then 32 days.")
-      exit
     end
     datapull = get_datapull
     datapull.results(check_id, start_time, end_time).each do |result|
@@ -157,6 +156,12 @@ class PingdomToGraphite::CLI < Thor
   def backfill(check_id)
     load_config!
     load_state!
+    # Check the state file
+    if @state.has_key?(check_id) && @state[check_id].has_key?("earliest_ts")
+      earliest_ts = @state[check_id.to_s]["earliest_ts"]
+    else 
+      error("You can't backfill a check you've never run an update on.")
+    end
     load_probe_list!
     load_check_list!
     datapull = get_datapull
@@ -165,13 +170,7 @@ class PingdomToGraphite::CLI < Thor
       limit = ask("You have #{datapull.effective_limit} API calls remaining. How many would you like to use?")
     end
     created_ts = datapull.check(check_id).created
-    # Check the state file
-    if @state.has_key?(check_id) && @state[check_id].has_key?("earliest_ts")
-      earliest_ts = @state[check_id.to_s]["earliest_ts"]
-    else 
-      error("You can't backfill a check you've never run an update on.")
-      exit
-    end
+    
     # Keep within the API limits 
     working_towards = (earliest_ts - created_ts) > 2678400 ? 31.days.ago.to_i : created_ts
     puts "Backfilling from #{Time.at(earliest_ts)} working towards #{Time.at(working_towards)}. Check began on #{Time.at(created_ts)}"
@@ -201,7 +200,6 @@ class PingdomToGraphite::CLI < Thor
       config_file = File.expand_path(options.config)
       unless File.exists?(config_file) 
         error("Missing config file (#{options.config})")
-        exit
       end
 
       @config = JSON::parse(File.read(config_file));
@@ -292,6 +290,10 @@ class PingdomToGraphite::CLI < Thor
     rec_count
   end
 
+  def error(message)
+    STDERR.puts "ERROR: #{message}"
+    exit 1
+  end
 
   def log_level
     options.verbose ? Logger::DEBUG : Logger::ERROR
