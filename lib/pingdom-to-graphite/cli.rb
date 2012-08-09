@@ -66,6 +66,7 @@ class PingdomToGraphite::CLI < Thor
     File.open(File.expand_path(options.config),"w",0600) do |f|
       f.write(JSON.pretty_generate(@config))
     end
+    puts "Added #{@checks.count} checks to #{options.config}"
   end
 
   desc "advice", "Gives you some advice about update frequency."
@@ -112,7 +113,7 @@ class PingdomToGraphite::CLI < Thor
   def results(check_id)
     load_config!
     load_probe_list!
-    start_time = (options.start_time) ? DateTime.parse(options.start_time).to_i : 1.hour.ago
+    start_time = (options.start_time) ? DateTime.parse(options.start_time).to_i : 1.hour.ago.to_i
     end_time = (options.end_time) ? DateTime.parse(options.end_time).to_i : DateTime.now.to_i
     if start_time - end_time > 2764800
       error("Date range must be less then 32 days.")
@@ -277,8 +278,8 @@ class PingdomToGraphite::CLI < Thor
     result_list = Array.new
     datapull.full_results(check_id, latest_ts, earlist_ts, limit).each do |result|
       result_list += parse_result(check_id, result)
-      latest_stored = result.time if result.time > latest_stored || latest_stored.nil?
-      earliest_stored = result.time if result.time < earliest_stored || earliest_stored.nil?
+      latest_stored = result.time if latest_stored.nil? || result.time > latest_stored
+      earliest_stored = result.time if earliest_stored.nil? || result.time < earliest_stored
       rec_count += 1
     end
     # Push to graphite

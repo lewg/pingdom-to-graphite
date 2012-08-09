@@ -7,7 +7,5 @@ group :development do
   gem "rake"
   gem "aruba"
   gem "cucumber"
-  gem "fakeweb"
-  gem "vcr"
   gem "ronn"
 end
