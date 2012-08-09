@@ -28,9 +28,9 @@ to do any actual work.
     pingdom-to-graphite init_checks
 
 This will pre-fill the pingdom->checks setting in your config file with a list
-of all your available checks. Since you're curious:
+of all your available check ids. Since you're curious:
 
-    pingdom-to-graphite checks
+    pingdom-to-graphite list
 
 Will list them all, as well as their current status. Ok, back to business:
 
