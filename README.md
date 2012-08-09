@@ -1,10 +1,10 @@
-# Pingdom to Graphite
+# pingdom-to-graphite
 
-A script to allow you to copy metrics from Pingdom to graphite. Pingdom,
-although allowing access to  effective all your metrics through the API, does
-have some limits in place to prevent abuse. This script tries to be mindful of
-that, although does provide a "backfill" option if you care to burn up your
-daily api limit in one fell swoop.
+A tool for copying metrics from Pingdom to graphite. Pingdom, although allowing
+access to  effective all your metrics through the API, does have some limits in
+place to prevent abuse. This script tries to be mindful of that, although does
+provide a "backfill" option if you care to burn up your daily api limit in one
+fell swoop.
 
 ## Usage
 
