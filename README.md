@@ -6,42 +6,56 @@ place to prevent abuse. This tool tries to be mindful of that, although does
 provide a "backfill" option if you care to burn up your daily api limit in one
 fell swoop.
 
+## Installation
+
+pingdom-to-graphite is available as a gem package:
+
+    % gem install pingdom-to-graphite
+    % pingdom-to-graphite
+
+Or, you could grab the source and call the executable directly:
+
+    % git clone git://github.com/lewg/pingdom-to-graphite.git
+    % cd pingdom-to-graphite
+    % bundle install
+    % bin/pingdom-to-graphite
+
 ## Usage
 
 The utility itself will provide detailed help for all the commands if you just
 invoke it by itself:
 
-    pingdom-to-graphite
+    % pingdom-to-graphite
 
 ### For the Impatient
 
 Ok, so you don't like reading command line help. Here's how to get up and
 running quickly:
 
-    pingdom-to-graphite init
+    % pingdom-to-graphite init
 
 Will place a sample config file into the default location `~/.p2g/config.json`.
 Don't worry scripters, this location can be overriden with the `-c` switch. Drop
 your pingdom credentials and graphite settings into there to enable the script
 to do any actual work.
 
-    pingdom-to-graphite init_checks
+    % pingdom-to-graphite init_checks
 
 This will pre-fill the pingdom->checks setting in your config file with a list
 of all your available check ids. Since you're curious:
 
-    pingdom-to-graphite list
+    % pingdom-to-graphite list
 
 Will list them all, as well as their current status. Ok, back to business:
 
-    pingdom-to-graphite update
+    % pingdom-to-graphite update
 
 Will pull the 100 most recent checks for each check specified in your config
 file and create a  `~/.p2g/state.json` file storing a few key timestamps about
 what data you've successfully send to graphite. Similar to the config file, this
 location can be overridden with the `-s` switch.
 
-    pingdom-to-graphite update
+    % pingdom-to-graphite update
 
 *"Hey, that's the same command!"* you say. Indeed it is, and will run through your
 checks picking up where we left of from the last update. If you stopped to check
@@ -53,7 +67,7 @@ limiting factor is that updating each metric is a separate API call, so the more
 checks you want to pipe to graphite the less frequently you'll be able to run
 the script. Want some numbers?
 
-    pingdom-to-graphite advice
+    % pingdom-to-graphite advice
 
 Will give you the rough API numbers you'd consume a day given your number of
 monitored checks in five minute increments until it finds something that works.
@@ -64,7 +78,7 @@ necessarily the best approach! Speaking of the API, how about some more historic
 data because, you know, charts and stuff! Got that covered, but you're going to have
 to pick the specific check you'd like some more data for.
 
-    pingdom-to-graphite backfill CHECK_ID
+    % pingdom-to-graphite backfill CHECK_ID
 
 Will use up a number of your existing API calls to get historical data for that specific
 check. How many? Well, it will ask, and you can tell it. You can also specify with the 
