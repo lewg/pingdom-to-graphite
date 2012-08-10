@@ -1,7 +1,7 @@
 # pingdom-to-graphite
 
 A tool for copying metrics from Pingdom to graphite. Pingdom, although allowing
-access to  effective all your metrics through the API, does have some limits in
+access to effectively all your metrics through the API, does have some limits in
 place to prevent abuse. This script tries to be mindful of that, although does
 provide a "backfill" option if you care to burn up your daily api limit in one
 fell swoop.
@@ -60,7 +60,15 @@ monitored checks in five minute increments until it finds something that works.
 However, keep in mind that you're not using this to do alerting (right, I mean,
 that's what you're paying Pingdom for) and that graphite  doesn't have any
 issues backfilling content, so picking the most aggressive value you can isn't
-necessarily the best approach!
+necessarily the best approach! Speaking of the API, how about some more historical
+data because, you know, charts and stuff! Got that covered, but you're going to have
+to pick the specific check you'd like some more data for.
+
+    pingdom-to-graphite backfull CHECK_ID
+
+Will use up a number of your existing API calls to get historical data for that specific
+check. How many? Well, it will ask, and you can tell it. You can also specify with the 
+`-l` flag. 
 
 ## License
 

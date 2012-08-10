@@ -167,7 +167,7 @@ class PingdomToGraphite::CLI < Thor
     datapull = get_datapull
     chunk = 10
     unless limit = options.limit
-      limit = ask("You have #{datapull.effective_limit} API calls remaining. How many would you like to use?")
+      limit = ask("You have #{datapull.effective_limit} API calls remaining. How many would you like to use?").to_i
     end
     created_ts = datapull.check(check_id).created
     
@@ -176,7 +176,11 @@ class PingdomToGraphite::CLI < Thor
     puts "Backfilling from #{Time.at(earliest_ts)} working towards #{Time.at(working_towards)}. Check began on #{Time.at(created_ts)}"
     # Break it into chunks
     additions = 0
-    limit.to_i.modulo(chunk).times { additions += pull_and_push(check_id, working_towards, earliest_ts, chunk) }
+    (limit.to_i.div(chunk)+1).times do
+      batch_count = pull_and_push(check_id, working_towards, earliest_ts, chunk)
+      puts "#{batch_count} metrics pushed in this batch." if options.verbose
+      additions += batch_count
+    end
     puts "#{additions} metrics sent to graphite for check #{check_id}."
   end
 

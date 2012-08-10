@@ -17,7 +17,7 @@ class PingdomToGraphite::DataPull
 
   # Return the lower of the two API limits
   def effective_limit
-    # Catch-22: We want to maximize our API calls, buy we don't have our limits until we make an API call.
+    # Catch-22: We want to maximize our API calls, but we don't have our limits until we make an API call.
     unless @client.limit
       @client.contacts
     end
@@ -74,7 +74,7 @@ class PingdomToGraphite::DataPull
       result_set = self.results(check_id, start_ts, end_ts, offset)
       full_set = full_set.concat(result_set)
       offset += 100
-    end until result_set.count < 100 || effective_limit < 100 || api_calls.eql?(api_call_limit.to_i)
+    end until result_set.count < 100 || effective_limit < 10 || api_calls >= api_call_limit.to_i
     full_set
   end
 
