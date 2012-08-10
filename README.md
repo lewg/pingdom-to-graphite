@@ -64,7 +64,7 @@ necessarily the best approach! Speaking of the API, how about some more historic
 data because, you know, charts and stuff! Got that covered, but you're going to have
 to pick the specific check you'd like some more data for.
 
-    pingdom-to-graphite backfull CHECK_ID
+    pingdom-to-graphite backfill CHECK_ID
 
 Will use up a number of your existing API calls to get historical data for that specific
 check. How many? Well, it will ask, and you can tell it. You can also specify with the 
