@@ -140,6 +140,9 @@ class PingdomToGraphite::CLI < Thor
       # Check the state file
       check_state = @state.has_key?(check_id.to_s) ? @state[check_id.to_s] : Hash.new
       latest_ts = check_state.has_key?("latest_ts") ? check_state["latest_ts"] : 1.hour.ago.to_i
+      # API limits to 2764800 seconds, so we'll use that (minutes 30 seconds)
+      limit_ts = 2764770.seconds.ago.to_i
+      latest_ts = (latest_ts.to_i < limit_ts) ? limit_ts : latest_ts
       new_records = pull_and_push(check_id, latest_ts)
       puts "#{new_records} metrics sent to graphite for check #{check_id}."
     end
