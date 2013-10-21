@@ -48,7 +48,7 @@ class PingdomToGraphite::CLI < Thor
           "host"  => "YOUR_SERVER",
           "port"    => "2003",
           "prefix"  => "pingdom"
-        }  
+        }
       }
       File.open(File.expand_path(options.config),"w",0600) do |f|
         f.write(JSON.pretty_generate(settings))
@@ -58,8 +58,9 @@ class PingdomToGraphite::CLI < Thor
 
   end
 
-  desc "init_checks", "Add all your checks to your config. (Will overwrite existing list.)"
-  def init_checks
+  desc "init_checks <regex>", "Add your checks to your config. (Will overwrite existing list.) If regex is supplied will only add matching checks."
+  def init_checks(check_regex=nil)
+    @check_regex = check_regex
     load_config!
     load_check_list!
     @config["pingdom"]["checks"] = @checks.keys
@@ -162,7 +163,7 @@ class PingdomToGraphite::CLI < Thor
     # Check the state file
     if @state.has_key?(check_id) && @state[check_id].has_key?("earliest_ts")
       earliest_ts = @state[check_id.to_s]["earliest_ts"]
-    else 
+    else
       error("You can't backfill a check you've never run an update on.")
     end
     load_probe_list!
@@ -173,8 +174,8 @@ class PingdomToGraphite::CLI < Thor
       limit = ask("You have #{datapull.effective_limit} API calls remaining. How many would you like to use?").to_i
     end
     created_ts = datapull.check(check_id).created
-    
-    # Keep within the API limits 
+
+    # Keep within the API limits
     working_towards = (earliest_ts - created_ts) > 2678400 ? 31.days.ago.to_i : created_ts
     puts "Backfilling from #{Time.at(earliest_ts)} working towards #{Time.at(working_towards)}. Check began on #{Time.at(created_ts)}"
     # Break it into chunks
@@ -205,7 +206,7 @@ class PingdomToGraphite::CLI < Thor
   def load_config!
     if @config.nil?
       config_file = File.expand_path(options.config)
-      unless File.exists?(config_file) 
+      unless File.exists?(config_file)
         error("Missing config file (#{options.config})")
       end
 
@@ -250,9 +251,15 @@ class PingdomToGraphite::CLI < Thor
     datapull = get_datapull
     @checks = Hash.new
     datapull.checks.each do |check|
-      # {"name"=>"Autocomplete", "id"=>259103, "type"=>"http", "lastresponsetime"=>203173, 
+      # {"name"=>"Autocomplete", "id"=>259103, "type"=>"http", "lastresponsetime"=>203173,
       #  "status"=>"up", "lasttesttime"=>1298102416}
-      @checks[check.id] = check
+      if @check_regex
+        if check.name =~ /#{@check_regex}/
+          @checks[check.id] = check
+        end
+      else
+        @checks[check.id] = check
+      end
     end
   end
 
