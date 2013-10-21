@@ -39,10 +39,10 @@ Don't worry scripters, this location can be overriden with the `-c` switch. Drop
 your pingdom credentials and graphite settings into there to enable the script
 to do any actual work.
 
-    % pingdom-to-graphite init_checks
+    % pingdom-to-graphite init_checks [regex]
 
 This will pre-fill the pingdom->checks setting in your config file with a list
-of all your available check ids. Since you're curious:
+of all your available check ids. If you'd like to limit the list, you can supply an optional regular expression, and only the matching checks will be placed in your config. Since you're curious:
 
     % pingdom-to-graphite list
 
