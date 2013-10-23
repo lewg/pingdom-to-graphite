@@ -266,7 +266,7 @@ class PingdomToGraphite::CLI < Thor
   # Take a pingdom check, and return an Array of metrics to be passed to graphite
   def parse_result(check_id, result)
     results = Array.new
-    prefix = "#{@config["graphite"]["prefix"]}.#{@checks[check_id.to_i].type}."
+    prefix = "#{@config["graphite"]["prefix"]}.#{@checks[check_id.to_i].class}."
     prefix += @checks[check_id.to_i].name.gsub(/ /,"_").gsub(/\./,"")
     check_status = result.status.eql?("up") ? 1 : 0
     check_time = Time.at(result.time).to_i
