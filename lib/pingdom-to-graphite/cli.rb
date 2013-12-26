@@ -288,14 +288,22 @@ class PingdomToGraphite::CLI < Thor
     # Pull the data
     rec_count = 0
     result_list = Array.new
-    datapull.full_results(check_id, latest_ts, earlist_ts, limit).each do |result|
-      result_list += parse_result(check_id, result)
-      latest_stored = result.time if latest_stored.nil? || result.time > latest_stored
-      earliest_stored = result.time if earliest_stored.nil? || result.time < earliest_stored
-      rec_count += 1
+    begin
+      datapull.full_results(check_id, latest_ts, earlist_ts, limit).each do |result|
+        result_list += parse_result(check_id, result)
+        latest_stored = result.time if latest_stored.nil? || result.time > latest_stored
+        earliest_stored = result.time if earliest_stored.nil? || result.time < earliest_stored
+        rec_count += 1
+      end
+    rescue Pingdom::Error => e
+      error("Caught error from Pingdom: #{e}")
     end
     # Push to graphite
-    datapush.to_graphite(result_list) unless result_list.empty?
+    begin
+      datapush.to_graphite(result_list) unless result_list.empty?
+    rescue Exception => e
+      error("Failed to push to graphite: #{e}")
+    end
     # Store the state
     @state[check_id] = Hash.new
     @state[check_id]["latest_ts"] = latest_stored
