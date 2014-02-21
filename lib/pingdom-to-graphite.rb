@@ -1,3 +1,3 @@
 module PingdomToGraphite
-  
+
 end
