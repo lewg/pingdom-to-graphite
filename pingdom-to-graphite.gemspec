@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.version     = PingdomToGraphite::VERSION
   s.authors     = ["Lew Goettner"]
   s.email       = ["lew@goettner.net"]
+  s.license     = "MIT"
   s.homepage    = "https://github.com/lewg/pingdom-to-graphite"
   s.summary     = %q{A command line tool for pulling stats from pingdom and shipping them to graphite.}
   s.description = %q{A tool for copying metrics from Pingdom to graphite. Pingdom, although 
