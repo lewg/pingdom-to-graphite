@@ -230,7 +230,7 @@ class PingdomToGraphite::CLI < Thor
 
     # If the state dir doesn't exist create it first to prevent errors
     unless File.directory?(File.dirname(state_file))
-      FileUtils.mkdir_p(File.dirname(state_path), :mode => 0700)
+      FileUtils.mkdir_p(File.dirname(state_file), :mode => 0700)
     end
 
     File.open(state_file,"w",0600) do |f|
