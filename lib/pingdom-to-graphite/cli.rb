@@ -227,6 +227,12 @@ class PingdomToGraphite::CLI < Thor
   # Write the state to disk
   def write_state!
     state_file = File.expand_path(options.state)
+
+    # If the state dir doesn't exist create it first to prevent errors
+    unless File.directory?(File.dirname(state_file))
+      FileUtils.mkdir_p(File.dirname(state_path), :mode => 0700)
+    end
+
     File.open(state_file,"w",0600) do |f|
       f.write(JSON.generate(@state))
     end
