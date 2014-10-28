@@ -114,8 +114,8 @@ class PingdomToGraphite::CLI < Thor
   def results(check_id)
     load_config!
     load_probe_list!
-    start_time = (options.start_time) ? DateTime.parse(options.start_time).to_i : 1.hour.ago.to_i
-    end_time = (options.end_time) ? DateTime.parse(options.end_time).to_i : DateTime.now.to_i
+    start_time = (options.start_time) ? DateTime.parse(options.start_time).to_i : Time.now.to_i - 3600
+    end_time = (options.end_time) ? DateTime.parse(options.end_time).to_i : Time.now.to_i
     if start_time - end_time > 2764800
       error("Date range must be less then 32 days.")
     end
