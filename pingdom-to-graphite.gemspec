@@ -23,14 +23,14 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "bundler", "~> 1.7"
   s.add_runtime_dependency "thor", "~> 0.19"
   s.add_runtime_dependency "json", "~> 1.8"
-  s.add_runtime_dependency "graphite-metric", "~> 0.3.0"
-  s.add_runtime_dependency "activesupport", "~> 3.0.4"
-  s.add_runtime_dependency "i18n", "~> 0.5.0" # ActiveSupport dependency"
-  s.add_runtime_dependency "pingdom-ruby", "~> 1.0.4"
+  s.add_runtime_dependency "graphite-metric", "~> 0.3"
+  s.add_runtime_dependency "activesupport", "~> 3.0"
+  s.add_runtime_dependency "i18n", "~> 0.5" # ActiveSupport dependency"
+  s.add_runtime_dependency "pingdom-ruby", "~> 1.0"
   # for pingdom-ruby (not built into their gemspec)
-  s.add_runtime_dependency "faraday", "~> 0.5.7"
-  s.add_runtime_dependency "excon", "~> 0.41.0"
-  s.add_runtime_dependency "yajl-ruby", '~> 1.2.1'
+  s.add_runtime_dependency "faraday", "~> 0.5"
+  s.add_runtime_dependency "excon", "~> 0.41"
+  s.add_runtime_dependency "yajl-ruby", '~> 1.2'
 
 
 end
