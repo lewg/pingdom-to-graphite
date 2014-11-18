@@ -1,5 +1,5 @@
 require "pingdom-to-graphite"
-require "pingdom-client"
+require "pingdom-ruby"
 
 require "logger"
 

@@ -6,6 +6,10 @@ require "thor"
 require "json"
 require "fileutils"
 require "logger"
+require "excon"
+
+# Handle certificate errors, does make this a little less secure!
+Excon.defaults[:ssl_verify_peer] = false
 
 class PingdomToGraphite::CLI < Thor
 
