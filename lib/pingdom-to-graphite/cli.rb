@@ -197,7 +197,7 @@ class PingdomToGraphite::CLI < Thor
   def get_datapull
     if @datapull.nil?
       load_config!
-      @datapull = PingdomToGraphite::DataPull.new(@config["pingdom"]["username"], @config["pingdom"]["password"], @config["pingdom"]["key"], log_level)
+      @datapull = PingdomToGraphite::DataPull.new(@config["pingdom"]["username"], @config["pingdom"]["password"], @config["pingdom"]["key"], @config["pingdom"]["account_email"], log_level)
     end
     @datapull
   end
