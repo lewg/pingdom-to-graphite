@@ -5,11 +5,12 @@ require "logger"
 
 class PingdomToGraphite::DataPull
 
-  def initialize(username, password, key, log_level = Logger::ERROR)
-    @username   = username
-    @password   = password
-    @key        = key
-    @log_level  = log_level
+  def initialize(username, password, key, account_email, log_level = Logger::ERROR)
+    @username      = username
+    @password      = password
+    @key           = key
+    @account_email = account_email
+    @log_level     = log_level
 
     @client = connect
 
@@ -85,7 +86,7 @@ class PingdomToGraphite::DataPull
     log = Logger.new(STDOUT)
     log.level = @log_level
     begin
-      client = Pingdom::Client.new :username => @username, :password => @password, :key => @key, :logger => log
+      client = Pingdom::Client.new :username => @username, :password => @password, :key => @key, :account_email => @account_email, :logger => log
     rescue
       error("There was a problem connecting to pingdom.")
     end
