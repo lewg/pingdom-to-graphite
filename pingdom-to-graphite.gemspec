@@ -19,10 +19,10 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
+  s.required_ruby_version = '>= 1.9.2'
 
   s.add_runtime_dependency "bundler", "~> 1.7"
   s.add_runtime_dependency "thor", "~> 0.19"
-  s.add_runtime_dependency "json", "~> 1.8"
   s.add_runtime_dependency "graphite-metric", "~> 0.3"
   s.add_runtime_dependency "activesupport", "~> 3.0"
   s.add_runtime_dependency "i18n", "~> 0.5" # ActiveSupport dependency"
@@ -31,6 +31,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "faraday", "~> 0.5.7"
   s.add_runtime_dependency "excon", "~> 0.41"
   s.add_runtime_dependency "yajl-ruby", '~> 1.2.1'
-
 
 end
