@@ -34,6 +34,13 @@ running quickly:
 
     % pingdom-to-graphite init
 
+Will place a sample config file into the default location `~/.p2g/config.json`.
+Don't worry scripters, this location can be overriden with the `-c` switch. Drop
+your pingdom credentials and graphite settings into there to enable the script
+to do any actual work.
+
+The sample config.json will look like:
+
 ```
 {
   "pingdom": {
@@ -52,11 +59,6 @@ running quickly:
   }
 }
 ```
-
-Will place a sample config file into the default location `~/.p2g/config.json`.
-Don't worry scripters, this location can be overriden with the `-c` switch. Drop
-your pingdom credentials and graphite settings into there to enable the script
-to do any actual work.
 
     % pingdom-to-graphite init_checks [regex]
 
