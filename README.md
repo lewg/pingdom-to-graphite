@@ -34,6 +34,25 @@ running quickly:
 
     % pingdom-to-graphite init
 
+```
+{
+  "pingdom": {
+    "username": "YOUR_USERNAME",
+    "password": "YOUR_PASSWORD",
+    "key": "YOUR_API_KEY",
+    "checks": [
+      "CHECK_ID_1",
+      "CHECK_ID_2"
+    ]
+  },
+  "graphite": {
+    "host": "YOUR_SERVER",
+    "port": "2003",
+    "prefix": "pingdom"
+  }
+}
+```
+
 Will place a sample config file into the default location `~/.p2g/config.json`.
 Don't worry scripters, this location can be overriden with the `-c` switch. Drop
 your pingdom credentials and graphite settings into there to enable the script
@@ -81,8 +100,8 @@ to pick the specific check you'd like some more data for.
     % pingdom-to-graphite backfill CHECK_ID
 
 Will use up a number of your existing API calls to get historical data for that specific
-check. How many? Well, it will ask, and you can tell it. You can also specify with the 
-`-l` flag. 
+check. How many? Well, it will ask, and you can tell it. You can also specify with the
+`-l` flag.
 
 ## License
 
@@ -107,4 +126,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
