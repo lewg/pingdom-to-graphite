@@ -51,7 +51,7 @@ class PingdomToGraphite::CLI < Thor
         "graphite"  => {
           "host"  => "YOUR_SERVER",
           "port"    => "2003",
-          "prefix"  => "pingdom.Pingdom::Check"
+          "prefix"  => "pingdom"
         }
       }
       File.open(File.expand_path(options.config),"w",0600) do |f|
@@ -276,7 +276,7 @@ class PingdomToGraphite::CLI < Thor
   # Take a pingdom check, and return an Array of metrics to be passed to graphite
   def parse_result(check_id, result)
     results = Array.new
-    prefix = @config["graphite"]["prefix"] || "pingdom.Pingdom::Check"
+    prefix = @config["graphite"]["prefix"] || "pingdom"
     prefix += ".#{@checks[check_id.to_i].name.gsub(/ /,'_').gsub(/\./,'')}"
     check_status = result.status.eql?("up") ? 1 : 0
     check_time = Time.at(result.time).to_i
